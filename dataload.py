@@ -6,7 +6,6 @@ from skimage.io import imread
 from skimage.transform import resize
 from skimage.color import rgb2gray
 from sklearn.preprocessing import LabelEncoder, LabelBinarizer
-from PIL import Image
 
 class AnimalsDataset(Dataset):
 
@@ -32,21 +31,16 @@ class AnimalsDataset(Dataset):
         img_name = os.path.join(self.root_dir, self.fk_frame.iloc[idx, 0])
         image = imread(img_name)
         if self.train:
-            #labels = self.labels_one_hot[idx]
-            labels = self.fk_frame.iloc[idx, 1]
+            labels = self.labels_one_hot[idx]
         else:
             labels = 0
         #image = rgb2gray(image)
-        image = resize(image, (320, 320, 3))
+        image = resize(image, (256, 256, 3))
 
         if image is not None:
             sample = {'image': image, 'labels': labels}
 
         if self.transform:
-            # image = Image.fromarray(image, 'RGB')
-            # print(image)
-            #image = self.transform(image)
-            #sample = {'image': image, 'labels': labels}
             sample = self.transform(sample)
 
         return sample

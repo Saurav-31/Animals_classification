@@ -10,23 +10,11 @@ import numpy as np
 import torch
 warnings.filterwarnings(action='ignore')
 
-data_transforms = transforms.Compose([
-        Rotate2d(),
-        RandomCrop((224, 224)),
-        ToTensor(),
-        Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-data_transforms_test = transforms.Compose([
-        RandomCrop((224, 224)),
-        ToTensor(),
-        Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
 data_transform1 = transforms.Compose([ToTensor()])
 animals_dataset = AnimalsDataset(filename='meta-data_new/meta-data/train.csv', root_dir='./train_new/train/', train=True,
-                                 transform=data_transforms)
+                                 transform=data_transform1)
 test_dataset = AnimalsDataset(filename='meta-data_new/meta-data/test.csv', root_dir='./test_new/test', train=False,
-                              transform=data_transforms_test)
+                              transform=data_transform1)
 
 test_loader = DataLoader(test_dataset, batch_size=60)
 
@@ -45,31 +33,27 @@ net.eval()
 #######################
 # Testing an image
 data_iter = iter(test_dataset)
+sample = next(data_iter)
+data, labels = sample['image'], sample['labels']
 
-plt.figure(figsize=(10, 10))
-for i in range(12):
-    sample = next(data_iter)
-    data, labels = sample['image'], sample['labels']
+img = data
+img = torch.unsqueeze(img, 0)
+img = img.float().to(device)
 
-    img = data
-    img = torch.unsqueeze(img, 0)
-    img = img.float().to(device)
+out = net(img)
+prediction = torch.nn.functional.softmax(out)
+predicted_label = animals_dataset.labels_to_idx[torch.nn.functional.softmax(out).argmax().item() ]
+print("Predicted Label:", predicted_label)
+print("Probability:", torch.nn.functional.softmax(out).max().item())
 
-    out = net(img)
-    prediction = torch.nn.functional.softmax(out)
-    predicted_label = animals_dataset.labels_to_idx[torch.nn.functional.softmax(out).argmax().item() ]
-    print("Predicted Label:", predicted_label)
-    print("Probability:", torch.nn.functional.softmax(out).max().item())
-
-    plt.subplot(4, 3, i+1)
-    plt.imshow(torch.squeeze(img).cpu().numpy().transpose(1, 2, 0))
-    plt.title(predicted_label)
-    plt.text(240, 240, torch.nn.functional.softmax(out).max().item())
-    plt.axis('off')
+plt.figure()
+plt.imshow(torch.squeeze(img).cpu().numpy().transpose(1, 2, 0))
+plt.title(predicted_label)
+plt.axis('off')
 plt.show()
 
-# print(prediction)
-# print(animals_dataset.labels_to_idx)
+print(prediction)
+print(animals_dataset.labels_to_idx)
 
 soft_out = []
 for i, sample in enumerate(test_loader):
