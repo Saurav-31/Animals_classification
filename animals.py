@@ -113,25 +113,31 @@ net.eval()
 
 #######################
 # Testing an image
-data_iter = iter(test_dataset)
-sample = next(data_iter)
-data, labels = sample['image'], sample['labels']
+data_iter = iter(animals_dataset)
 
-img = data
-img = torch.unsqueeze(img, 0)
-img = img.float().to(device)
+plt.figure(figsize=(10, 10))
+for i in range(12):
+    sample = next(data_iter)
+    data, labels = sample['image'], sample['labels']
 
-out = net(img)
-prediction = torch.nn.functional.softmax(out)
-predicted_label = animals_dataset.labels_to_idx[torch.nn.functional.softmax(out).argmax().item() ]
-print("Predicted Label:", predicted_label)
-print("Probability:", torch.nn.functional.softmax(out).max().item())
+    img = data
+    img = torch.unsqueeze(img, 0)
+    img = img.float().to(device)
 
-plt.figure()
-plt.imshow(torch.squeeze(img).cpu().numpy().transpose(1, 2, 0))
-plt.title(predicted_label)
-plt.axis('off')
+    out = net(img)
+    prediction = torch.nn.functional.softmax(out)
+    gt_label = animals_dataset.labels_to_idx[labels.argmax().item()]
+    predicted_label = animals_dataset.labels_to_idx[torch.nn.functional.softmax(out).argmax().item() ]
+    print("Predicted Label:", predicted_label, " ", gt_label)
+    print("Probability:", torch.nn.functional.softmax(out).max().item())
+
+    plt.subplot(4, 3, i+1)
+    plt.imshow(torch.squeeze(img).cpu().numpy().transpose(1, 2, 0))
+    plt.title(predicted_label + " " + gt_label)
+    plt.text(240, 240, torch.nn.functional.softmax(out).max().item())
+    plt.axis('off')
 plt.show()
+
 
 print(prediction)
 print(animals_dataset.labels_to_idx)
